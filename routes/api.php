@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Blog\PostController;
 use App\Http\Controllers\Blog\Admin\CategoryController;
+use App\Http\Controllers\Api\Blog\Admin\PostController as AdminPostController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,4 +25,9 @@ Route::group($groupData, function () {
     Route::apiResource('categories', CategoryController::class)
         ->only($methods)
         ->names('blog.admin.categories');
+
+    // BlogPost
+    Route::apiResource('posts', AdminPostController::class)
+        ->except(['show'])
+        ->names('blog.admin.posts');
 });
