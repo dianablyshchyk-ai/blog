@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Blog\Admin;
 
+use App\Models\BlogPost;
+use App\Http\Requests\BlogPostCreateRequest;
 use App\Repositories\BlogPostRepository;
 use App\Repositories\BlogCategoryRepository;
 use App\Http\Requests\BlogPostUpdateRequest;
@@ -31,9 +33,17 @@ class PostController extends BaseController
     /**
      * Store a newly created resource.
      */
-    public function store(Request $request)
+    public function store(BlogPostCreateRequest $request)
     {
-        //
+        $data = $request->input(); //отримаємо масив даних, які надійшли з форми
+
+        $item = (new BlogPost())->create($data); //створюємо об'єкт і додаємо в БД
+
+        if ($item) {
+            return ['success' => 'Успішно збережено'];
+        } else {
+            return ['msg' => 'Помилка збереження'];
+        }
     }
 
     /**
@@ -76,6 +86,14 @@ class PostController extends BaseController
      */
     public function destroy(string $id)
     {
-        //
+        $result = BlogPost::destroy($id); // софт деліт, запис лишається
+
+        //$result = BlogPost::find($id)->forceDelete(); // повне видалення з БД
+
+        if ($result) {
+            return []; // TODO: Написати код респонса
+        } else {
+            return []; // TODO: Написати код респонса
+        }
     }
 }
