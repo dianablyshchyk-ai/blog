@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Api\Blog\Admin;
 
 use App\Models\BlogPost;
+use App\Jobs\BlogPostAfterCreateJob;
+use App\Jobs\BlogPostAfterDeleteJob;
 use App\Http\Requests\BlogPostCreateRequest;
 use App\Repositories\BlogPostRepository;
 use App\Repositories\BlogCategoryRepository;
 use App\Http\Requests\BlogPostUpdateRequest;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Bus\DispatchesJobs;
 
 class PostController extends BaseController
 {
+    use DispatchesJobs;
+
     public function __construct(
         private BlogPostRepository $blogPostRepository,
         private BlogCategoryRepository $blogCategoryRepository
@@ -35,11 +40,15 @@ class PostController extends BaseController
      */
     public function store(BlogPostCreateRequest $request)
     {
-        $data = $request->input(); //отримаємо масив даних, які надійшли з форми
+        $data = $request->input();
 
-        $item = (new BlogPost())->create($data); //створюємо об'єкт і додаємо в БД
+        $item = (new BlogPost())->create($data);
 
         if ($item) {
+
+            $job = new BlogPostAfterCreateJob($item);
+            $this->dispatch($job);
+
             return ['success' => 'Успішно збережено'];
         } else {
             return ['msg' => 'Помилка збереження'];
@@ -86,14 +95,17 @@ class PostController extends BaseController
      */
     public function destroy(string $id)
     {
-        $result = BlogPost::destroy($id); // софт деліт, запис лишається
+        $result = BlogPost::destroy($id);
 
-        //$result = BlogPost::find($id)->forceDelete(); // повне видалення з БД
+        //$result = BlogPost::find($id)->forceDelete();
 
         if ($result) {
-            return []; // TODO: Написати код респонса
+
+            BlogPostAfterDeleteJob::dispatch($id)->delay(20);
+
+            return [];
         } else {
-            return []; // TODO: Написати код респонса
+            return [];
         }
     }
 }
