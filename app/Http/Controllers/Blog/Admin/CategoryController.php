@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Blog\Admin;
 
+use App\Http\Resources\Api\Blog\Admin\CategoryResource;
 use App\Models\BlogCategory;
 use App\Repositories\BlogCategoryRepository;
 use Illuminate\Support\Str;
@@ -20,12 +21,8 @@ class CategoryController extends BaseController
      */
     public function index()
     {
-        //dd(__METHOD__);
-
-        //$paginator = BlogCategory::paginate(5);
         $paginator = $this->blogCategoryRepository->getAllWithPaginate(5);
-
-        return $paginator;
+        return CategoryResource::collection($paginator);
     }
 
     /**
@@ -34,7 +31,6 @@ class CategoryController extends BaseController
     public function store(BlogCategoryCreateRequest $request)
     {
         $data = $request->input();
-
         $item = (new BlogCategory())->create($data);
 
         if ($item) {
@@ -63,7 +59,6 @@ class CategoryController extends BaseController
     public function update(BlogCategoryUpdateRequest $request, $id)
     {
         $item = $this->blogCategoryRepository->getEdit($id);
-
         if (empty($item)) {
             return back()
                 ->withErrors(['msg' => "Запис id=[{$id}] не знайдено"])
@@ -71,9 +66,7 @@ class CategoryController extends BaseController
         }
 
         $data = $request->all();
-
         $result = $item->update($data);
-
         if ($result) {
             return [
                 'success' => 'Успішно збережено'

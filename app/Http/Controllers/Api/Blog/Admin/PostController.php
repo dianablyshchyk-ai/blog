@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Blog\Admin;
 
+use App\Http\Resources\Api\Blog\Admin\PostResource;
 use App\Models\BlogPost;
 use App\Jobs\BlogPostAfterCreateJob;
 use App\Jobs\BlogPostAfterDeleteJob;
@@ -31,8 +32,7 @@ class PostController extends BaseController
     public function index()
     {
         $paginator = $this->blogPostRepository->getAllWithPaginate();
-
-        return $paginator;
+        return PostResource::collection($paginator);
     }
 
     /**
@@ -41,14 +41,10 @@ class PostController extends BaseController
     public function store(BlogPostCreateRequest $request)
     {
         $data = $request->input();
-
         $item = (new BlogPost())->create($data);
-
         if ($item) {
-
             $job = new BlogPostAfterCreateJob($item);
             $this->dispatch($job);
-
             return ['success' => 'Успішно збережено'];
         } else {
             return ['msg' => 'Помилка збереження'];
@@ -64,8 +60,9 @@ class PostController extends BaseController
         if (empty($item)) {
             return response()->json(['message' => "Запис id=[{$id}] не знайдено"], 404);
         }
+
         $item->load(['user', 'category']);
-        return response()->json(['data' => $item]);
+        return new PostResource($item);
     }
 
     /**
@@ -74,13 +71,11 @@ class PostController extends BaseController
     public function update(BlogPostUpdateRequest $request, string $id)
     {
         $item = $this->blogPostRepository->getEdit($id);
-
         if (empty($item)) {
             return ['message' => "Запис id=[{$id}] не знайдено"];
         }
 
         $data = $request->all();
-
         $result = $item->update($data);
 
         if ($result) {
@@ -105,9 +100,7 @@ class PostController extends BaseController
         //$result = BlogPost::find($id)->forceDelete();
 
         if ($result) {
-
             BlogPostAfterDeleteJob::dispatch($id)->delay(20);
-
             return [];
         } else {
             return [];
