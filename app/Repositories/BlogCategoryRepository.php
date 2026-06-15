@@ -33,23 +33,10 @@ class BlogCategoryRepository extends CoreRepository
      */
     public function getForComboBox()
     {
-        //return $this->startConditions()->all();
-
         $columns = implode(', ', [
             'id',
             'CONCAT (id, ". ", title) AS id_title',
         ]);
-
-        //$result = $this->startConditions()->all();
-
-        /*$result = $this
-            ->startConditions()
-            ->select(
-                'blog_categories.*',
-                \DB::raw('CONCAT (id, ". ", title) AS id_title')
-            )
-            ->toBase()
-            ->get();*/
 
         $result = $this
             ->startConditions()
@@ -57,19 +44,19 @@ class BlogCategoryRepository extends CoreRepository
             ->toBase()
             ->get();
 
-        //dd($result);
-
         return $result;
     }
 
     /**
-     * Отримати категорію для виводу пагінатором
+     * Отримати категорію для виводу пагінатором з пошуком та динамічним сортуванням
      *
-     * @param int|null $perPage
-     *
+     * @param int $perPage
+     * @param string|null $search
+     * @param string $sortBy
+     * @param string $sortOrder
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getAllWithPaginate($perPage = null)
+    public function getAllWithPaginate($perPage = 5, $search = null, $sortBy = 'id', $sortOrder = 'desc')
     {
         $columns = [
             'id',
@@ -79,11 +66,19 @@ class BlogCategoryRepository extends CoreRepository
             'description',
         ];
 
-        return $this
+        $allowedColumns = ['id', 'title', 'slug'];
+        $sortBy = in_array($sortBy, $allowedColumns) ? $sortBy : 'id';
+        $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+
+        $query = $this
             ->startConditions()
             ->select($columns)
             ->with(['parentCategory:id,title'])
-            ->orderByDesc('id')
-            ->paginate($perPage);
+            ->orderBy($sortBy, $sortOrder);
+        if (!empty($search)) {
+            $query->where('title', 'LIKE', $search . '%');
+        }
+
+        return $query->paginate($perPage);
     }
 }

@@ -6,7 +6,7 @@ use App\Models\BlogPost as Model;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Class BlogСategoryRepository.
+ * Class BlogPostRepository.
  */
 class BlogPostRepository extends CoreRepository
 {
@@ -16,32 +16,43 @@ class BlogPostRepository extends CoreRepository
     }
 
     /**
-     * Отримати список статей
+     * Отримати список статей з пагінацією, пошуком та сортуванням
      *
+     * @param int $perPage
+     * @param string|null $search
+     * @param string $sortBy
+     * @param string $sortOrder
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getAllWithPaginate()
+    public function getAllWithPaginate($perPage = 5, $search = null, $sortBy = 'id', $sortOrder = 'desc')
     {
-        $columns = ['id', 'title', 'slug', 'is_published', 'published_at', 'user_id', 'category_id','content_raw',];
+        $columns = ['id', 'title', 'slug', 'is_published', 'published_at', 'user_id', 'category_id', 'content_raw'];
 
-        $result = $this->startConditions()
+        $allowedColumns = ['id', 'title', 'published_at'];
+        $sortBy = in_array($sortBy, $allowedColumns) ? $sortBy : 'id';
+        $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+
+        $query = $this->startConditions()
             ->select($columns)
-            ->orderBy('id', 'DESC')
+            ->orderBy($sortBy, $sortOrder)
             ->with([
                 'category' => function ($query) {
                     $query->select(['id', 'title']);
                 },
-                //'category:id,title',
                 'user:id,name',
-            ])
-            ->paginate(25);
+            ]);
 
-        return $result;
+        if (!empty($search)) {
+            $query->where('title', 'LIKE', $search . '%');
+        }
+
+        return $query->paginate($perPage);
     }
+
     /**
-     *  Отримати модель для редагування в адмінці
-     *  @param int $id
-     *  @return Model
+     * Отримати model для редагування в адмінці
+     * @param int $id
+     * @return Model
      */
     public function getEdit($id)
     {

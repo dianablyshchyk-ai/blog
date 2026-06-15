@@ -8,6 +8,7 @@ use App\Repositories\BlogCategoryRepository;
 use Illuminate\Support\Str;
 use App\Http\Requests\BlogCategoryUpdateRequest;
 use App\Http\Requests\BlogCategoryCreateRequest;
+use Illuminate\Http\Request;
 
 class CategoryController extends BaseController
 {
@@ -19,9 +20,14 @@ class CategoryController extends BaseController
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $paginator = $this->blogCategoryRepository->getAllWithPaginate(5);
+        $perPage = $request->input('per_page', 5);
+        $search = $request->input('search', null);
+        $sortBy = $request->input('sort_by', 'id');
+        $sortOrder = $request->input('sort_order', 'desc');
+        $paginator = $this->blogCategoryRepository->getAllWithPaginate($perPage, $search, $sortBy, $sortOrder);
+
         return CategoryResource::collection($paginator);
     }
 
@@ -80,7 +86,6 @@ class CategoryController extends BaseController
 
     /**
      * Remove the specified resource.
-     * ТЕПЕР ЦЕЙ МЕТОД ПОВНІСТЮ ПРАЦЮЄ!
      */
     public function destroy(string $id)
     {

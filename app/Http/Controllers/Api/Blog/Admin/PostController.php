@@ -29,15 +29,21 @@ class PostController extends BaseController
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        $paginator = $this->blogPostRepository->getAllWithPaginate();
+        $perPage = $request->input('per_page', 5);
+        $search = $request->input('search', null);
+        $sortBy = $request->input('sort_by', 'id');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        $paginator = $this->blogPostRepository->getAllWithPaginate($perPage, $search, $sortBy, $sortOrder);
+
         return PostResource::collection($paginator);
     }
 
-    /**
-     * Store a newly created resource.
-     */
     /**
      * Store a newly created resource.
      */
@@ -115,8 +121,6 @@ class PostController extends BaseController
     public function destroy(string $id)
     {
         $result = BlogPost::destroy($id);
-
-        //$result = BlogPost::find($id)->forceDelete();
 
         if ($result) {
             BlogPostAfterDeleteJob::dispatch($id)->delay(20);
