@@ -12,7 +12,7 @@ class BlogPostRepository extends CoreRepository
 {
     protected function getModelClass()
     {
-        return Model::class; //абстрагування моделі BlogCategory, для легшого створення іншого репозиторія
+        return Model::class;
     }
 
     /**
@@ -22,7 +22,7 @@ class BlogPostRepository extends CoreRepository
      */
     public function getAllWithPaginate()
     {
-        $columns = ['id', 'title', 'slug', 'is_published', 'published_at', 'user_id', 'category_id',];
+        $columns = ['id', 'title', 'slug', 'is_published', 'published_at', 'user_id', 'category_id','content_raw',];
 
         $result = $this->startConditions()
             ->select($columns)

@@ -38,17 +38,36 @@ class PostController extends BaseController
     /**
      * Store a newly created resource.
      */
+    /**
+     * Store a newly created resource.
+     */
     public function store(BlogPostCreateRequest $request)
     {
-        $data = $request->input();
+        $data = $request->all();
+
+        if (empty($data['user_id'])) {
+            $data['user_id'] = 1;
+        }
+
+        if (empty($data['slug'])) {
+            $data['slug'] = \Illuminate\Support\Str::slug($data['title']);
+        }
+
         $item = (new BlogPost())->create($data);
+
         if ($item) {
             $job = new BlogPostAfterCreateJob($item);
             $this->dispatch($job);
-            return ['success' => 'Успішно збережено'];
-        } else {
-            return ['msg' => 'Помилка збереження'];
+
+            return [
+                'success' => true,
+                'message' => 'Успішно збережено'
+            ];
         }
+
+        return response()->json([
+            'message' => 'Помилка збереження'
+        ], 500);
     }
 
     /**

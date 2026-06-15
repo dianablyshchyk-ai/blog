@@ -22,8 +22,8 @@ class PostResource extends JsonResource
             'is_published'   => (bool) $this->is_published,
             'date_published' => $this->published_at ? Carbon::parse($this->published_at)->format('Y-m-d H:i:s') : null,
             'published_at'   => $this->published_at,
-
-            // Передаємо id зв'язаних сутностей
+            'content_raw'    => $this->content_raw,
+            'content_html'   => $this->content_html,
             'user_id'        => $this->user_id,
             'category_id'    => $this->category_id,
             'user'           => $this->user,

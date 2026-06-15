@@ -20,8 +20,7 @@ $groupData = [
 ];
 
 Route::group($groupData, function () {
-
-    $methods = ['index', 'store', 'update'];
+    $methods = ['index', 'store', 'update', 'destroy'];
 
     Route::apiResource('categories', CategoryController::class)
         ->only($methods)

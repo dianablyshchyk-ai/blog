@@ -80,9 +80,36 @@ class CategoryController extends BaseController
 
     /**
      * Remove the specified resource.
+     * ТЕПЕР ЦЕЙ МЕТОД ПОВНІСТЮ ПРАЦЮЄ!
      */
     public function destroy(string $id)
     {
-        //
+        $item = BlogCategory::find($id);
+
+        if (empty($item)) {
+            return response()->json([
+                'message' => "Запис id=[{$id}] не знайдено"
+            ], 404);
+        }
+
+        $hasChildren = BlogCategory::where('parent_id', $id)->exists();
+        if ($hasChildren) {
+            return response()->json([
+                'message' => 'Не можна видалити категорію, у якої є підкатегорії!'
+            ], 400);
+        }
+
+        $result = $item->delete();
+
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Успішно видалено'
+            ];
+        } else {
+            return response()->json([
+                'message' => 'Помилка при видаленні'
+            ], 500);
+        }
     }
 }
